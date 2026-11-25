@@ -24,7 +24,7 @@ Ainda não é uma IA generativa conectada e não possui escuta de microfone. Nã
 No GitHub, abra **Actions** → **JARVIS builds** → escolha uma execução concluída → baixe o artifact **JARVIS-Windows** e extraia o `JARVIS.exe`.
 
 ## Android
-O protótipo usa Kotlin, Android SDK 35, AGP 8.7.3 e Gradle 8.9. Oferece informações básicas do dispositivo, bateria, configurações e reconhecimento de voz experimental; a fala reconhecida não executa comandos.
+A versão Android Ultra usa Kotlin, Android SDK 35 e oferece chat local por texto, reconhecimento de voz opcional, leitura de respostas por TTS, diagnóstico de bateria/RAM/armazenamento/estado térmico, auditoria básica de segurança, abertura de aplicações, atalhos para Wi-Fi/Bluetooth/DNS, seletor de ficheiros, lembretes locais e acesso opcional a metadados de notificações e última localização conhecida. A localização e o acesso a notificações exigem autorização do utilizador.
 
 ## Segurança e limites
 As ferramentas atuais são locais, simples e não executam comandos arbitrários digitados. O monitor de processos é apenas leitura. A pesquisa abre o navegador. Integração com IA, microfone no PC e controle entre PC e celular ainda não estão implementados.
