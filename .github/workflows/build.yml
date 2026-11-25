@@ -2,7 +2,7 @@ name: JARVIS builds
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, integrate-tokenarc-open-jarvis]
   pull_request:
     branches: [main]
 permissions:
