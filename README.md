@@ -28,6 +28,8 @@ A aplicação Android passa a usar como base o projeto [Open Jarvis](https://git
 
 **Primeira configuração do código:** clone o repositório com `git clone --recurse-submodules https://github.com/prajogoconta46-oss/JARVIS.git`. No Android Studio, abra a pasta `android`. A compilação também inicializa o submódulo automaticamente pelo GitHub Actions.
 
+Consulte [docs/ANDROID_STRUCTURE.md](docs/ANDROID_STRUCTURE.md) para a organização das pastas, as dependências de temas e os comandos de compilação.
+
 O código de Open Jarvis mantém os avisos e a licença MIT do autor original em `android/open-jarvis/LICENSE`. Permissões de acessibilidade, sobreposição, microfone e notificações devem ser concedidas manualmente no Android. Ações sensíveis devem ser confirmadas; não conceda permissões sem compreender o que permitem.
 
 ## Segurança e limites
