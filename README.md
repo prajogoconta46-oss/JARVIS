@@ -24,7 +24,11 @@ Ainda não é uma IA generativa conectada e não possui escuta de microfone. Nã
 No GitHub, abra **Actions** → **JARVIS builds** → escolha uma execução concluída → baixe o artifact **JARVIS-Windows** e extraia o `JARVIS.exe`.
 
 ## Android
-A versão Android Ultra usa Kotlin, Android SDK 35 e oferece chat local por texto, reconhecimento de voz opcional, leitura de respostas por TTS, diagnóstico de bateria/RAM/armazenamento/estado térmico, auditoria básica de segurança, abertura de aplicações, atalhos para Wi-Fi/Bluetooth/DNS, seletor de ficheiros, lembretes locais e acesso opcional a metadados de notificações e última localização conhecida. A localização e o acesso a notificações exigem autorização do utilizador.
+A aplicação Android passa a usar como base o projeto [Open Jarvis](https://github.com/tokenarc/open-jarvis), integrado como submódulo Git em `android/open-jarvis` e compilado como o app JARVIS. Inclui agente de tarefas, acessibilidade para executar ações em apps, chat/conversa, voz (STT/TTS), OCR/visão de ecrã, memória local Graphify, roteamento de tarefas, provedores de IA (Groq, Gemini e outros), modelos locais, automações, skills e suporte MCP.
+
+**Primeira configuração do código:** clone o repositório com `git clone --recurse-submodules https://github.com/prajogoconta46-oss/JARVIS.git`. No Android Studio, abra a pasta `android`. A compilação também inicializa o submódulo automaticamente pelo GitHub Actions.
+
+O código de Open Jarvis mantém os avisos e a licença MIT do autor original em `android/open-jarvis/LICENSE`. Permissões de acessibilidade, sobreposição, microfone e notificações devem ser concedidas manualmente no Android. Ações sensíveis devem ser confirmadas; não conceda permissões sem compreender o que permitem.
 
 ## Segurança e limites
 As ferramentas atuais são locais, simples e não executam comandos arbitrários digitados. O monitor de processos é apenas leitura. A pesquisa abre o navegador. Integração com IA, microfone no PC e controle entre PC e celular ainda não estão implementados.
