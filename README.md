@@ -1,19 +1,30 @@
 # JARVIS — Assistente PC + Android
 
-Protótipo inicial em português: agente desktop para Windows e aplicativo Android, com builds automatizados.
+Protótipo em português para Windows e Android, com builds automatizados no GitHub Actions.
 
-## Builds
-A cada push na branch `main`, GitHub Actions compila APK debug e executável Windows. Abra **Actions** → **JARVIS builds** → execução concluída → **Artifacts**. Também é possível iniciar manualmente pela opção **Run workflow**.
+## Windows
+A interface do PC é um chat sem botões de atalho. Digite comandos e pressione Enter. Respostas podem ser faladas localmente se a biblioteca de voz estiver disponível.
 
-## Windows (execução local)
+Comandos suportados no protótipo:
+- "diagnóstico do PC" — CPU, RAM, disco e bateria quando detectada.
+- "mostrar processos" — lista processos com maior consumo de memória (somente leitura).
+- "abre calculadora", "abre bloco de notas", "abre explorador".
+- "Downloads", "Configurações", "abre YouTube", "Google".
+- "pesquisa na internet [termo]" — abre pesquisa no navegador.
+- "que horas são", "que dia é hoje".
+
+Ainda não é uma IA generativa conectada e não possui escuta de microfone. Não execute tarefas destrutivas automaticamente.
+
+### Executar localmente
 1. Instale Python 3.11.
 2. Na pasta do projeto: `pip install -r pc/requirements.txt`.
-3. Execute `python pc/jarvis.py`.
+3. Execute: `python pc/jarvis.py`.
 
-O painel oferece diagnóstico de CPU, RAM e disco e atalhos de programas.
+## Build Windows
+No GitHub, abra **Actions** → **JARVIS builds** → escolha uma execução concluída → baixe o artifact **JARVIS-Windows** e extraia o `JARVIS.exe`.
 
 ## Android
-O projeto usa Kotlin, Android SDK 35, AGP 8.7.3 e Gradle 8.9. O app fornece informações do dispositivo, armazenamento, bateria, acesso às configurações e uma tentativa de reconhecimento de voz (a fala é exibida, não executa comandos).
+O protótipo usa Kotlin, Android SDK 35, AGP 8.7.3 e Gradle 8.9. Oferece informações básicas do dispositivo, bateria, configurações e reconhecimento de voz experimental; a fala reconhecida não executa comandos.
 
-## Segurança
-Não há controle remoto nem execução de comandos arbitrários. Builds debug são para testes. Integrações futuras devem exigir autenticação, consentimento e criptografia.
+## Segurança e limites
+As ferramentas atuais são locais, simples e não executam comandos arbitrários digitados. O monitor de processos é apenas leitura. A pesquisa abre o navegador. Integração com IA, microfone no PC e controle entre PC e celular ainda não estão implementados.
