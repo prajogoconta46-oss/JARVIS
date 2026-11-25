@@ -1,17 +1,19 @@
-# JARVIS — Assistente inteligente PC + Android
+# JARVIS — Assistente PC + Android
 
-Projeto inicial para um assistente pessoal em português, com agente Windows e aplicativo Android. O CI compila APK e pacote Windows automaticamente.
+Protótipo inicial em português: agente desktop para Windows e aplicativo Android, com builds automatizados.
 
-## Compilação automática
-1. Abra a aba **Actions**.
-2. Abra **JARVIS builds** e clique **Run workflow** (ou faça push).
-3. Baixe os artefatos **JARVIS-Android-APK** e **JARVIS-Windows** após execução verde.
+## Builds
+A cada push na branch `main`, GitHub Actions compila APK debug e executável Windows. Abra **Actions** → **JARVIS builds** → execução concluída → **Artifacts**. Também é possível iniciar manualmente pela opção **Run workflow**.
 
-## Windows
-Python 3.11+: `pip install -r pc/requirements.txt`, depois `python pc/jarvis.py`. Diagnóstico básico e atalhos com lista limitada.
+## Windows (execução local)
+1. Instale Python 3.11.
+2. Na pasta do projeto: `pip install -r pc/requirements.txt`.
+3. Execute `python pc/jarvis.py`.
+
+O painel oferece diagnóstico de CPU, RAM e disco e atalhos de programas.
 
 ## Android
-Kotlin, Android SDK 35 e Gradle/AGP. APK gerado pelo GitHub Actions.
+O projeto usa Kotlin, Android SDK 35, AGP 8.7.3 e Gradle 8.9. O app fornece informações do dispositivo, armazenamento, bateria, acesso às configurações e uma tentativa de reconhecimento de voz (a fala é exibida, não executa comandos).
 
-## Segurança / escopo
-Protótipo inicial. Não inclui acesso remoto nem execução remota de comandos. Futuras integrações devem usar autenticação, consentimento e criptografia.
+## Segurança
+Não há controle remoto nem execução de comandos arbitrários. Builds debug são para testes. Integrações futuras devem exigir autenticação, consentimento e criptografia.
