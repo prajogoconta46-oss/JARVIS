@@ -32,3 +32,17 @@ As ferramentas atuais são locais, simples e não executam comandos arbitrários
 ## Evolução planejada
 
 A arquitetura, fases de desenvolvimento, limitações e regras de segurança estão documentadas em [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). O plano separa agente Windows, agente Android, IA, voz, memória local e comunicação autenticada. Os itens descritos como planejados não estão implementados até que sejam desenvolvidos e testados.
+
+## IA online para Windows (opcional)
+
+O agente Windows agora suporta conversa com uma API compatível com o formato OpenAI Chat Completions. A IA é opcional e não funciona até você configurar uma chave válida. A chave não deve ser incluída no código, em commits, capturas de tela ou compartilhada em chats.
+
+No Windows, configure variáveis de ambiente (substitua pela sua chave privada, sem compartilhar):
+
+1. Abra Iniciar e procure **Editar variáveis de ambiente para sua conta**.
+2. Crie uma variável chamada `JARVIS_API_KEY` e defina o valor da chave do seu provedor.
+3. Opcional: crie `JARVIS_AI_MODEL` para escolher um modelo suportado pelo provedor (padrão: `gpt-4o-mini`).
+4. Opcional: crie `JARVIS_AI_URL` para definir o endpoint compatível (padrão: `https://api.openai.com/v1/chat/completions`).
+5. Feche e reabra o terminal/app para carregar as variáveis. Reinicie o JARVIS.
+
+A conversa comum enviada à IA online é transmitida ao provedor configurado. Não envie informações privadas se não desejar compartilhá-las. Esta primeira integração é conversacional; o modelo ainda não aciona ferramentas de PC automaticamente. Comandos locais reconhecidos continuam sendo tratados pelo código local.
