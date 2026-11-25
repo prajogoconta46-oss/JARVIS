@@ -28,3 +28,7 @@ O protótipo usa Kotlin, Android SDK 35, AGP 8.7.3 e Gradle 8.9. Oferece informa
 
 ## Segurança e limites
 As ferramentas atuais são locais, simples e não executam comandos arbitrários digitados. O monitor de processos é apenas leitura. A pesquisa abre o navegador. Integração com IA, microfone no PC e controle entre PC e celular ainda não estão implementados.
+
+## Evolução planejada
+
+A arquitetura, fases de desenvolvimento, limitações e regras de segurança estão documentadas em [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md). O plano separa agente Windows, agente Android, IA, voz, memória local e comunicação autenticada. Os itens descritos como planejados não estão implementados até que sejam desenvolvidos e testados.
