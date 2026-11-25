@@ -4,6 +4,9 @@ import subprocess
 import tkinter as tk
 import webbrowser
 import threading
+import json
+import urllib.request
+import urllib.error
 from datetime import datetime
 from urllib.parse import quote_plus
 import psutil
@@ -14,15 +17,19 @@ except Exception:
     pyttsx3 = None
 
 BG, PANEL, FG, ACCENT = "#07111f", "#101e31", "#e7f0ff", "#5eead4"
+AI_MODEL = os.environ.get("JARVIS_AI_MODEL", "gpt-4o-mini")
+AI_URL = os.environ.get("JARVIS_AI_URL", "https://api.openai.com/v1/chat/completions")
+AI_KEY = os.environ.get("JARVIS_API_KEY", "").strip()
 
 class JarvisApp:
     def __init__(self, root):
         self.root = root
-        root.title("JARVIS | Assistente pessoal")
+        root.title("JARVIS | Assistente Inteligente")
         root.geometry("900x680")
         root.minsize(650, 480)
         root.configure(bg=BG)
         self.engine = None
+        self.history = []
         if pyttsx3:
             try:
                 self.engine = pyttsx3.init()
@@ -32,7 +39,7 @@ class JarvisApp:
         header = tk.Frame(root, bg=BG, padx=24, pady=18)
         header.pack(fill="x")
         tk.Label(header, text="JARVIS", fg=ACCENT, bg=BG, font=("Segoe UI", 28, "bold")).pack(anchor="w")
-        tk.Label(header, text="Assistente pessoal para Windows • chat e voz", fg=FG, bg=BG, font=("Segoe UI", 11)).pack(anchor="w")
+        tk.Label(header, text="Assistente Inteligente • Windows • IA configurável", fg=FG, bg=BG, font=("Segoe UI", 11)).pack(anchor="w")
         self.chat = tk.Text(root, bg=PANEL, fg=FG, insertbackground="white", font=("Segoe UI", 11), relief="flat", wrap="word", padx=15, pady=12, state="disabled")
         self.chat.pack(fill="both", expand=True, padx=24, pady=(4, 12))
         bottom = tk.Frame(root, bg=BG, padx=24, pady=12)
@@ -43,12 +50,18 @@ class JarvisApp:
         self.status = tk.Label(root, text="Pronto • digite e pressione Enter", bg=BG, fg=ACCENT, font=("Segoe UI", 10))
         self.status.pack(anchor="w", padx=24, pady=(0, 12))
         self.entry.focus_set()
-        self.add("JARVIS", "Olá! Pode conversar comigo digitando. Posso verificar o PC, abrir programas, pesquisar na internet, mostrar processos e falar minhas respostas. Ainda não sou uma IA generativa conectada.")
+        if AI_KEY:
+            greeting="Olá! Minha conexão com IA online está configurada. Também posso consultar recursos locais e executar algumas ações seguras."
+        else:
+            greeting="Olá! Sou o JARVIS. As ferramentas locais estão disponíveis. Para conversa inteligente com IA online, configure JARVIS_API_KEY no Windows. Não é necessário compartilhar sua chave aqui."
+        self.add("JARVIS", greeting)
+
     def add(self, who, msg):
         self.chat.configure(state="normal")
         self.chat.insert("end", f"{who}: {msg}\n\n")
         self.chat.see("end")
         self.chat.configure(state="disabled")
+
     def speak(self, msg):
         if not self.engine: return
         def worker():
@@ -57,13 +70,15 @@ class JarvisApp:
                 self.engine.runAndWait()
             except Exception: pass
         threading.Thread(target=worker, daemon=True).start()
+
     def send(self, event=None):
         msg = self.entry.get().strip()
         if not msg: return
         self.entry.delete(0, "end")
         self.add("Você", msg)
-        self.status.config(text="Respondendo...")
+        self.status.config(text="Analisando...")
         self.root.after(30, lambda: self.respond(msg))
+
     def diagnose(self):
         cpu = psutil.cpu_percent(interval=.4)
         mem = psutil.virtual_memory()
@@ -71,7 +86,8 @@ class JarvisApp:
         disk = psutil.disk_usage(drive)
         battery = psutil.sensors_battery()
         bat = f" Bateria: {battery.percent}%." if battery else " Bateria não detectada (PC pode estar conectado à tomada)."
-        return f"Resumo do computador: CPU {cpu}%. RAM {mem.percent}% usada ({round(mem.available/1024**3,1)} GB disponível). Disco {disk.percent}% ocupado, {round(disk.free/1024**3,1)} GB livres. Windows {platform.release()}.{bat}"
+        return f"Resumo: CPU {cpu}%. RAM {mem.percent}% usada ({round(mem.available/1024**3,1)} GB disponível). Disco {disk.percent}% ocupado, {round(disk.free/1024**3,1)} GB livres. Windows {platform.release()}.{bat}"
+
     def processes(self):
         items=[]
         for p in psutil.process_iter(["name","cpu_percent","memory_info"]):
@@ -81,11 +97,35 @@ class JarvisApp:
                 items.append((info["cpu_percent"] or 0,mem,info["name"] or "processo"))
             except (psutil.NoSuchProcess,psutil.AccessDenied): pass
         items.sort(reverse=True)
-        return "Processos com maior uso de memória (não encerrei nenhum):\n" + "\n".join(f"• {n}: {m:.0f} MB" for c,m,n in items[:8])
+        return "Processos com maior uso de memória (somente leitura):\n" + "\n".join(f"• {n}: {m:.0f} MB" for c,m,n in items[:8])
+
     def open_downloads(self):
         folder=os.path.join(os.path.expanduser("~"),"Downloads")
-        if os.path.isdir(folder): os.startfile(folder); return "Abrindo sua pasta Downloads."
-        return "Não encontrei a pasta Downloads."
+        if os.path.isdir(folder): os.startfile(folder); return "Abrindo Downloads."
+        return "Não encontrei Downloads."
+
+    def ai_reply(self, msg):
+        if not AI_KEY:
+            return "Não encontrei uma chave de IA configurada. Minhas ferramentas locais ainda funcionam. Configure JARVIS_API_KEY no ambiente do Windows para habilitar a conversa inteligente online."
+        self.history.append({"role":"user","content":msg})
+        # Keep a bounded conversation context.
+        self.history=self.history[-16:]
+        payload={"model":AI_MODEL,"messages":[{"role":"system","content":"Você é JARVIS, assistente tecnológico cordial, profissional e proativo. Responda em português brasileiro, com clareza e concisão. Não afirme que executou ações que não executou. Você não pode executar ferramentas ou comandos diretamente nesta conversa; explique quando uma tarefa precisa das ferramentas locais ou de autorização."}]+self.history,"temperature":0.5}
+        req=urllib.request.Request(AI_URL,data=json.dumps(payload).encode("utf-8"),headers={"Authorization":"Bearer "+AI_KEY,"Content-Type":"application/json"},method="POST")
+        try:
+            with urllib.request.urlopen(req,timeout=45) as response:
+                data=json.loads(response.read().decode("utf-8"))
+            answer=data["choices"][0]["message"]["content"].strip()
+            self.history.append({"role":"assistant","content":answer})
+            self.history=self.history[-16:]
+            return answer
+        except urllib.error.HTTPError as e:
+            if e.code in (401,403): return "A API rejeitou a chave. Verifique JARVIS_API_KEY."
+            if e.code==429: return "A API está limitando solicitações ou sem saldo disponível. Tente novamente mais tarde."
+            return f"Falha na conexão com IA (HTTP {e.code})."
+        except Exception as e:
+            return f"Não consegui conectar à IA: {e}"
+
     def respond(self, msg):
         q=msg.lower().strip(); answer=""
         try:
@@ -95,7 +135,7 @@ class JarvisApp:
             elif any(x in q for x in ["abre calculadora","calculadora"]): subprocess.Popen(["calc.exe"]); answer="Abrindo a calculadora."
             elif any(x in q for x in ["abre explorador","explorador de arquivos"]): subprocess.Popen(["explorer.exe"]); answer="Abrindo o Explorador de Arquivos."
             elif any(x in q for x in ["downloads","pasta de download"]): answer=self.open_downloads()
-            elif any(x in q for x in ["configurações","configuracoes","settings"]): subprocess.Popen(["cmd","/c","start","ms-settings:"]); answer="Abrindo as Configurações do Windows."
+            elif any(x in q for x in ["configurações","configuracoes","settings"]): subprocess.Popen(["cmd","/c","start","ms-settings:"]); answer="Abrindo Configurações."
             elif "youtube" in q: webbrowser.open("https://youtube.com"); answer="Abrindo YouTube."
             elif any(x in q for x in ["pesquisa na internet","pesquisar na internet","pesquise","procure na web"]):
                 term=q.replace("pesquisa na internet","").replace("pesquisar na internet","").replace("pesquise","").replace("procure na web","").strip()
@@ -104,11 +144,9 @@ class JarvisApp:
             elif "google" in q: webbrowser.open("https://google.com"); answer="Abrindo Google."
             elif any(x in q for x in ["que horas","hora agora","horário"]): answer="Agora são "+datetime.now().strftime("%H:%M")+"."
             elif any(x in q for x in ["que dia","data de hoje","qual a data"]): answer="Hoje é "+datetime.now().strftime("%d/%m/%Y")+"."
-            elif any(x in q for x in ["olá","ola","oi","bom dia","boa tarde","boa noite"]): answer="Olá! Estou pronto. Como posso ajudar?"
-            elif any(x in q for x in ["obrigado","obrigada","valeu"]): answer="Por nada! Conte comigo."
             elif any(x in q for x in ["fechar jarvis","encerrar assistente","sair do jarvis"]):
                 answer="Até logo!"; self.add("JARVIS",answer); self.speak(answer); self.root.after(700,self.root.destroy); return
-            else: answer="Não tenho uma IA generativa conectada ainda, mas posso atender: diagnóstico do PC, processos, abrir calculadora, Notepad, Explorador, Downloads, Configurações, YouTube, pesquisa na web, hora e data."
+            else: answer=self.ai_reply(msg)
         except Exception as exc:
             answer=f"Não consegui executar essa tarefa. Detalhe: {exc}"
         self.add("JARVIS",answer)
