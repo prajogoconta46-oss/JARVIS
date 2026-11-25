@@ -6,9 +6,7 @@ import android.app.admin.DevicePolicyManager
 import android.content.*
 import android.graphics.drawable.GradientDrawable
 import android.content.pm.PackageManager
-import android.location.Location
 import android.location.LocationManager
-import android.net.Uri
 import android.os.*
 import android.provider.Settings
 import android.speech.RecognizerIntent
@@ -128,7 +126,7 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
     private fun appendMessage(who: String, message: String) {
         val line = TextView(this).apply {
-            this.text = "$who: $message"; textSize = 14f; setTextColor(if (who == "JARVIS") accent else text)
+            this.text = "$who: $message"; textSize = 14f; setTextColor(if (who == "JARVIS") accent else primaryTextColor)
             setPadding(5, 8, 5, 8)
         }
         chat.addView(line); scroll.post { scroll.fullScroll(View.FOCUS_DOWN) }
@@ -197,10 +195,14 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         respond("Núcleos lógicos: ${Runtime.getRuntime().availableProcessors()}. Economia de energia: ${pm.isPowerSaveMode}. Estado térmico Android: $thermal.")
     }
     private fun showDiagnostics() {
-        batteryInfo()
-        val mi = ActivityManager.MemoryInfo(); (getSystemService(ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(mi)
+        val battery = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+        val level = battery?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale = battery?.getIntExtra(BatteryManager.EXTRA_SCALE, 100) ?: 100
+        val batteryPercent = if (level >= 0 && scale > 0) (level * 100 / scale).toString() + "%" else "indisponível"
+        val mi = ActivityManager.MemoryInfo()
+        (getSystemService(ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(mi)
         val st = StatFs(android.os.Environment.getDataDirectory().path)
-        respond("Diagnóstico: ${Build.MANUFACTURER} ${Build.MODEL}; Android ${Build.VERSION.RELEASE}; RAM livre ${mi.availMem / 1048576} MB; armazenamento livre ${st.availableBytes / 1073741824} GB.")
+        respond("Diagnóstico: ${Build.MANUFACTURER} ${Build.MODEL}; Android ${Build.VERSION.RELEASE}; bateria $batteryPercent; RAM livre ${mi.availMem / 1048576} MB; armazenamento livre ${st.availableBytes / 1073741824} GB.")
     }
     private fun securityAudit() {
         val km = getSystemService(KEYGUARD_SERVICE) as KeyguardManager
