@@ -2,7 +2,9 @@ package com.jarvis.assistant
 
 import android.Manifest
 import android.app.*
+import android.app.admin.DevicePolicyManager
 import android.content.*
+import android.graphics.drawable.GradientDrawable
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
@@ -26,7 +28,8 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
     private var speakReplies = false
     private val prefs by lazy { getSharedPreferences("jarvis_memory", MODE_PRIVATE) }
     private val accent = 0xff67e8f9.toInt()
-    private val text = 0xffe5edf9.toInt()
+    private val primaryTextColor = 0xffe5edf9.toInt()
+    private lateinit var voiceToggle: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,11 +46,13 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(18, 22, 18, 18)
-            setBackgroundColor(0xff0b1220.toInt())
+            setBackgroundColor(0xff080f1d.toInt())
         }
         val heading = TextView(this).apply {
             this.text = "JARVIS ULTRA"
-            textSize = 27f; setTextColor(accent); gravity = Gravity.CENTER
+            textSize = 28f; setTextColor(accent); gravity = Gravity.CENTER
+            typeface = android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.BOLD)
+            setPadding(0, 6, 0, 2)
         }
         root.addView(heading)
         root.addView(TextView(this).apply {
@@ -56,11 +61,13 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         })
         output = TextView(this).apply {
             text = "Sistema pronto."
-            textSize = 13f; setTextColor(text); setPadding(4, 14, 4, 10)
+            textSize = 13f; setTextColor(primaryTextColor); setPadding(12, 12, 12, 12)
+            background = roundedPanel(0xff142238.toInt(), 16f)
         }
         root.addView(output)
         scroll = ScrollView(this).apply {
-            setBackgroundColor(0xff111c2e.toInt())
+            background = roundedPanel(0xff101b2c.toInt(), 16f)
+            clipToPadding = false
         }
         chat = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(10, 10, 10, 10) }
         scroll.addView(chat)
@@ -68,16 +75,19 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
 
         input = EditText(this).apply {
             hint = "Escreva um comando ou mensagem..."
-            setHintTextColor(0xff94a3b8.toInt()); setTextColor(text)
-            setSingleLine(true); setPadding(12, 10, 12, 10)
+            setHintTextColor(0xff94a3b8.toInt()); setTextColor(primaryTextColor)
+            setSingleLine(true); setPadding(14, 12, 14, 12)
+            background = roundedPanel(0xff142238.toInt(), 14f)
+            textSize = 15f
         }
         root.addView(input)
         val sendRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         addButton(sendRow, "Enviar", accent) { process(input.text.toString()); input.setText("") }
         addButton(sendRow, "🎙 Voz", 0xff24364f.toInt()) { requestVoice() }
-        addButton(sendRow, if (speakReplies) "🔊 Voz ON" else "🔇 Voz OFF", 0xff24364f.toInt()) {
-            speakReplies = !speakReplies; renderStatus("Leitura de respostas: " + if (speakReplies) "ativada" else "desativada")
-            render()
+        voiceToggle = addButton(sendRow, if (speakReplies) "🔊 Voz ligada" else "🔇 Voz desligada", 0xff24364f.toInt()) {
+            speakReplies = !speakReplies
+            voiceToggle.text = if (speakReplies) "🔊 Voz ligada" else "🔇 Voz desligada"
+            respond("Leitura das respostas " + if (speakReplies) "ativada." else "desativada.")
         }
         root.addView(sendRow)
         val tools = listOf(
@@ -100,13 +110,21 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         setContentView(root)
     }
 
-    private fun addButton(parent: LinearLayout, label: String, color: Int = 0xff24364f.toInt(), action: () -> Unit) {
+    private fun addButton(parent: LinearLayout, label: String, color: Int = 0xff24364f.toInt(), action: () -> Unit): Button {
         val b = Button(this).apply {
-            text = label; setTextColor(text); setBackgroundColor(color); textSize = 12f
+            text = label; setTextColor(primaryTextColor); background = roundedPanel(color, 14f); textSize = 12f
             isAllCaps = false; setOnClickListener { try { action() } catch (e: Exception) { respond("Não foi possível concluir: ${e.message ?: "erro desconhecido"}") } }
         }
-        parent.addView(b, LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(3, 3, 3, 3) })
+        parent.addView(b, LinearLayout.LayoutParams(0, -2, 1f).apply { setMargins(4, 4, 4, 4) })
+        return b
     }
+
+    private fun roundedPanel(color: Int, radiusDp: Float): GradientDrawable =
+        GradientDrawable().apply {
+            setColor(color)
+            cornerRadius = radiusDp * resources.displayMetrics.density
+            setStroke(1, 0x334b6688)
+        }
 
     private fun appendMessage(who: String, message: String) {
         val line = TextView(this).apply {
@@ -154,7 +172,9 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         }
     }
 
-    private fun String.normalize(): String = this
+    private fun String.normalize(): String =
+        java.text.Normalizer.normalize(this, java.text.Normalizer.Form.NFD)
+            .replace("\\p{Mn}+".toRegex(), "")
     private fun batteryInfo() {
         val b = registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
         val level = b?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
