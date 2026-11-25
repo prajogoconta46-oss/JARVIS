@@ -239,6 +239,11 @@ class MainActivity : Activity(), TextToSpeech.OnInitListener {
         alarm.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, System.currentTimeMillis() + delay, pi)
         respond("Lembrete agendado. O Android apresentará uma notificação no horário escolhido.")
     }
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 81 && grantResults.any { it == PackageManager.PERMISSION_GRANTED }) requestLocation()
+        else if (requestCode == 81) respond("Permissão de localização não concedida.")
+    }
     private fun requestVoice() {
         try {
             val i = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
